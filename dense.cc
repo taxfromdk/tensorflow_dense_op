@@ -47,7 +47,7 @@ public:
   }
   
   void Compute(OpKernelContext* context) override {
-    printf("DenseOp-Begin\n");
+    //printf("DenseOp-Begin\n");
 
     // get the input tensor
     const Tensor& input = context->input(0);
@@ -69,13 +69,13 @@ public:
     DCHECK_EQ(biases_shape.dims(), 2);
     
     const int batch_samples = input_shape.dim_size(0);
-    printf("batch_samples %d\n", batch_samples);
+    //printf("batch_samples %d\n", batch_samples);
 
     const int input_feature_width = input_shape.dim_size(1);
-    printf("input_feature_width %d\n", input_feature_width);
+    //printf("input_feature_width %d\n", input_feature_width);
 
     const int units = weights_shape.dim_size(1);
-    printf("units %d\n", units);
+    //printf("units %d\n", units);
 
     //Check input width matches weights height 
     DCHECK_EQ(input_feature_width, weights_shape.dim_size(0));
@@ -84,8 +84,8 @@ public:
 
     // create output shape
     TensorShape output_shape;
-    printf("batch_samples: %d\n", batch_samples);
-    printf("units: %d\n", units);
+    //printf("batch_samples: %d\n", batch_samples);
+    //printf("units: %d\n", units);
 
     output_shape.AddDim(batch_samples);
     output_shape.AddDim(units);
@@ -109,7 +109,7 @@ public:
         output_tensor(ix_sample, ix_unit) += biases_tensor(0, ix_unit);
       }
     }
-    printf("DenseOp-End\n");
+    //printf("DenseOp-End\n");
   }
 };
 
@@ -132,7 +132,8 @@ public:
   
   void Compute(OpKernelContext* context) override {
     
-    printf("DenseGradOp-Start\n");
+    //printf("-----------------\n");
+    //printf("DenseGradOp-Start\n");
 
     DCHECK_EQ(4, context->num_inputs());
 
@@ -170,50 +171,61 @@ public:
     auto grad_biases_tensor = grad_biases->matrix<float>();
     
 
-    //Build gradient of input with respect to output
-    printf("Input tensor %d %d\n", input_shape.dim_size(0), input_shape.dim_size(1));    
-    for (int x = 0; x < input_shape.dim_size(1); x++) 
-    {
-        for (int y = 0; y < input_shape.dim_size(0); y++) 
-        {
-            grad_input_tensor(y, x) = 0.0; //grad_weights_tensor(,x);
-        }
-    }
+    int input_count = input_shape.dim_size(1);  //Number of values in each sample
+    int sample_count = input_shape.dim_size(0); //Number of samples in batch
+    int unit_count = weights_shape.dim_size(1); //Number of units
     
-    //Build gradient of weights with respect to output
-    printf("Weights tensor %d %d\n", weights_shape.dim_size(0), weights_shape.dim_size(1));    
-    for (int x = 0; x < weights_shape.dim_size(1); x++) //unit index 
+
+    //Build gradient of bias with respect to output
+    //printf("Biases tensor %d %d\n", biases_shape.dim_size(0), biases_shape.dim_size(1));    
+    for (int x = 0; x < unit_count; x++) 
     {
-        for (int y = 0; y < weights_shape.dim_size(0); y++) //input feature index
+        grad_biases_tensor(0, x) = 0.0;
+        for(int i=0; i<sample_count;i++)
+        {
+            grad_biases_tensor(0, x) += grad_tensor(i,x);      
+        }       
+    }
+
+  
+    //Build gradient of weights with respect to output
+    //printf("Weights tensor %d %d\n", weights_shape.dim_size(0), weights_shape.dim_size(1));    
+    for (int x = 0; x < unit_count; x++) //unit index 
+    {
+        for (int y = 0; y < input_count; y++) //input feature index
         {
             grad_weights_tensor(y, x) = 0.0;
-            
-            //A change in a weight will mean a change in all outputs using that weight
-            for (int i = 0; i < input_shape.dim_size(1); i++) //input feature index
+            for(int i=0; i<sample_count;i++)
             {
-                for (int j = 0; j < input_shape.dim_size(0); j++) //batch index
-                {
-                    grad_weights_tensor(y, x) += grad_input_tensor(j, x);
-                }
+                grad_weights_tensor(y, x) += input_tensor(i,y)*grad_tensor(i,x);      
             }
-            //Average over batch
-            grad_weights_tensor(y, x) /= input_shape.dim_size(0);
         }
     }
     
-    //Build gradient of bias with respect to output
-    printf("Biases tensor %d %d\n", biases_shape.dim_size(0), biases_shape.dim_size(1));    
-    for (int x = 0; x < biases_shape.dim_size(1); x++) 
+    
+    //Build gradient of input with respect to output
+    //printf("Input tensor %d %d\n", input_shape.dim_size(0), input_shape.dim_size(1));    
+    for (int x = 0; x < input_count; x++) 
     {
-        for (int y = 0; y < biases_shape.dim_size(0); y++) 
+        for (int y = 0; y < sample_count; y++) 
         {
-            grad_biases_tensor(y, x) = 1.0;
+            //printf("...%d...%d\n", y, x);
+            grad_input_tensor(y, x) = 0.0;
+            for(int i=0; i<unit_count;i++)
+            {
+                grad_input_tensor(y, x) += weights_tensor(x,i) * grad_tensor(y,i);
+            }
         }
     }
     
-    printf("Grad tensor %d %d \n", grad_shape.dim_size(0), grad_shape.dim_size(1));
+    
+    
+    
+    
+    //printf("Grad tensor %d %d \n", grad_shape.dim_size(0), grad_shape.dim_size(1));
 
-    printf("DenseGradOp-End\n");
+    //printf("DenseGradOp-End\n");
+    //printf("-----------------\n");
   }
 };
 
