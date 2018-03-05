@@ -36,38 +36,19 @@ REGISTER_OP("Dense")
     shape_inference::DimensionHandle samples = c->Dim(input_shape, 0);
     shape_inference::DimensionHandle units = c->Dim(weight_shape, 1);
     
-    //shape_inference::DimensionHandle merged;
-    
-
-
-    //c->Merge(input_rows, weight_cols, &merged);
-    //TF_RETURN_IF_ERROR(c->Merge(input_rows, weight_cols, &merged));
     c->set_output(0, c->Matrix(samples, units));
-
-    //printf("register op end!!! \n");
 
     return Status::OK();
   });
 
-/// \brief Implementation of an inner product operation.
-/// \param context
-/// \author David Stutz
 class DenseOp : public OpKernel {
 public:
-  /// \brief Constructor.
-  /// \param context
   explicit DenseOp(OpKernelConstruction* context) : OpKernel(context) {
-    //printf("ccc \n");
   }
   
-  /// \brief Compute the inner product.
-  /// \param context
   void Compute(OpKernelContext* context) override {
-    //printf("compute!!! \n");
-/*
-    // some checks to be sure ...
-    DCHECK_EQ(3, context->num_inputs());
-    */
+    printf("DenseOp-Begin\n");
+
     // get the input tensor
     const Tensor& input = context->input(0);
     
@@ -82,7 +63,6 @@ public:
     const TensorShape& weights_shape = weights.shape();
     const TensorShape& biases_shape = biases.shape();
     
-
     //Check that inputs are two dimensional
     DCHECK_EQ(input_shape.dims(), 2);
     DCHECK_EQ(weights_shape.dims(), 2);
@@ -129,20 +109,12 @@ public:
         output_tensor(ix_sample, ix_unit) += biases_tensor(0, ix_unit);
       }
     }
+    printf("DenseOp-End\n");
   }
 };
 
 REGISTER_KERNEL_BUILDER(Name("Dense").Device(DEVICE_CPU), DenseOp);
 
-
-
-/// \file inner_product_grad.cc
-/// \author David Stutz
-/// \brief Implementation of the gradient of a inner product operation, see
-/// inner_product.cc.
-
-// the gradients are simply passed as additional arguments as
-// they are available in the Python function for registering the gradient operation.
 REGISTER_OP("DenseGrad")
   .Input("grad: float32")
   .Input("input: float32")
@@ -152,39 +124,27 @@ REGISTER_OP("DenseGrad")
   .Output("grad_weights: float32")
   .Output("grad_biases: float32");
 
-/// \brief Implementation of an inner product gradient operation.
-/// Note that this operation is used in Python to register the gradient as
-/// this is not possible in C*+ right now.
-/// \param context
-/// \author David Stutz
 class DenseGradOp : public OpKernel {
 public:
-  /// \brief Constructor.
-  /// \param context
   explicit DenseGradOp(OpKernelConstruction* context) : OpKernel(context) {
     
   }
   
-  /// \brief Compute the inner product gradients.
-  /// \param context
   void Compute(OpKernelContext* context) override {
     
-    // output and grad is provided as input
+    printf("DenseGradOp-Start\n");
+
     DCHECK_EQ(4, context->num_inputs());
 
-    // get the gradient tensor
     const Tensor& grad = context->input(0);
     
-    // get the original input tensor
     const Tensor& input = context->input(1);
     
-    // get the weight tensor
     const Tensor& weights = context->input(2);
     
-    // get the weight tensor
     const Tensor& biases = context->input(3);
     
-    // create input shape (inferred from the additional attribute `n`)
+    TensorShape grad_shape = grad.shape();
     TensorShape input_shape = input.shape();
     TensorShape weights_shape = weights.shape();
     TensorShape biases_shape = biases.shape();
@@ -250,7 +210,10 @@ public:
             grad_biases_tensor(y, x) = 1.0;
         }
     }
-    //printf("bbb\n");
+    
+    printf("Grad tensor %d %d \n", grad_shape.dim_size(0), grad_shape.dim_size(1));
+
+    printf("DenseGradOp-End\n");
   }
 };
 

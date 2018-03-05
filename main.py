@@ -3,13 +3,10 @@ import numpy as np
 import tensorflow as tf
 import random
 import math
-#import _dense_grad
 import random
 import math
 dense_module = tf.load_op_library('build/libdense.so')
 import _dense_grad
-
-#build simple network
 
 
 LEARNING_RATE = 0.001
@@ -48,14 +45,14 @@ l = X
 #l =  tf.layers.dense(l, units=48, activation=tf.nn.relu)
 #l =  tf.layers.dense(l, units=1, activation=None)
 
-l =  full_layer(l, 48, tf.nn.relu, "A")
-print(l)
-l =  full_layer(l, 48, tf.nn.relu, "B")
-print(l)
-l =  full_layer(l, 48, tf.nn.relu, "C")
-print(l)
-l =  full_layer(l, 48, tf.nn.relu, "D")
-print(l)
+#l =  full_layer(l, 48, tf.nn.relu, "A")
+#print(l)
+#l =  full_layer(l, 48, tf.nn.relu, "B")
+#print(l)
+#l =  full_layer(l, 48, tf.nn.relu, "C")
+#print(l)
+#l =  full_layer(l, 48, tf.nn.relu, "D")
+#print(l)
 l =  full_layer(l, 1, None, "E")
 print(l)
 
@@ -73,23 +70,11 @@ session.run(tf.global_variables_initializer())
 def blackbox_function(x):
     return 3.0 + math.sin(x*math.pi*2/RANGE)
 
-#def getBatch(f, n):
-#    batch = []
-#    for _ in range(n):
-#        while True:
-#            x = RANGE*(random.random()*2-1)
-#            print(x)
-#            batch.append(([x], [f(x)]))
-#            break
-#    i, o = zip(*batch)
-#    return list(i), list(o)
-
-
 plt.ion()
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-plt.ylim([-3,3])
+plt.ylim([-5,5])
 plt.xlim([-RANGE,RANGE])
 
 line_target, = ax.plot([0], [1], 'g.')
@@ -101,14 +86,18 @@ def itemize(d):
 while True:
     d_x = [[(random.random()*2-1)*RANGE] for _ in range(BATCH_SIZE) ]
     d_y = [[blackbox_function(x[0])] for x in d_x]
+    print("Training step begin")
     [tr, l, r] = session.run(fetches=[train_step, loss, response],feed_dict={X: d_x, Y: d_y})
     print("Loss: ", l)
+    print("Training step end")
     
     
     dp_x = [x*2*RANGE/100.0 - RANGE for x in range(100)]
     dp_x_ = [[x] for x in dp_x]
     
+    print("Evaluation step begin")
     [r] = session.run(fetches=[response],feed_dict={X: dp_x_})
+    print("Evaluation step end")
     
     dp_target = [ blackbox_function(_) for _ in dp_x]
     dp_nn = [_[0] for _ in r]
@@ -117,6 +106,3 @@ while True:
     line_nn.set_data(dp_x,dp_nn)
         
     fig.canvas.draw()
-
-
-
