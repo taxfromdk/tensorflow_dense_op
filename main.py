@@ -66,7 +66,7 @@ session = tf.Session()
 session.run(tf.global_variables_initializer())
 
 def blackbox_function(x):
-    return math.sin(x*math.pi*2/RANGE)*0.5 + x/60.0
+    return 1.0+math.sin(x*math.pi*2/RANGE)*0.5 + x/60.0
 
 plt.ion()
 
@@ -81,12 +81,14 @@ line_nn, = ax.plot([0], [1], 'r-')
 def itemize(d):
     return list(map(lambda _: [_],d))
 
+iteration = 0
 while True:
     d_x = [[(random.random()*2-1)*RANGE] for _ in range(BATCH_SIZE) ]
     d_y = [[blackbox_function(x[0])] for x in d_x]
     #print("Training step begin")
     [tr, l, r] = session.run(fetches=[train_step, loss, response],feed_dict={X: d_x, Y: d_y})
-    print("Loss: ", l)
+    print("Iteration: %d Loss: ", iteration, l)
+    iteration += 1
     #print("Training step end")
     
     

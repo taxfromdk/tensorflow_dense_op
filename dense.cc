@@ -10,7 +10,6 @@
 
 using namespace tensorflow;
 
-
 REGISTER_OP("Dense")
   .Input("input: float")
   .Input("weights: float")
@@ -230,3 +229,4 @@ public:
 };
 
 REGISTER_KERNEL_BUILDER(Name("DenseGrad").Device(DEVICE_CPU), DenseGradOp);
+
