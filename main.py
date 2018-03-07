@@ -9,7 +9,7 @@ dense_module = tf.load_op_library('build/libdense.so')
 import _dense_grad
 
 
-LEARNING_RATE = 0.0005
+LEARNING_RATE = 0.002
 BATCH_SIZE = 64
 RANGE = 100
 
@@ -87,7 +87,7 @@ while True:
     d_y = [[blackbox_function(x[0])] for x in d_x]
     #print("Training step begin")
     [tr, l, r] = session.run(fetches=[train_step, loss, response],feed_dict={X: d_x, Y: d_y})
-    print("Iteration: %d Loss: ", iteration, l)
+    print("Iteration: %d Loss: %f" % (iteration, l))
     iteration += 1
     #print("Training step end")
     

@@ -108,7 +108,6 @@ public:
         output_tensor(ix_sample, ix_unit) += biases_tensor(0, ix_unit);
       }
     }
-    //printf("DenseOp-End\n");
   }
 };
 
@@ -131,9 +130,6 @@ public:
   
   void Compute(OpKernelContext* context) override {
     
-    //printf("-----------------\n");
-    //printf("DenseGradOp-Start\n");
-
     DCHECK_EQ(4, context->num_inputs());
 
     const Tensor& grad = context->input(0);
@@ -148,9 +144,6 @@ public:
     TensorShape input_shape = input.shape();
     TensorShape weights_shape = weights.shape();
     TensorShape biases_shape = biases.shape();
-    
-    //DCHECK_EQ(input_shape.dim_size(0), weights_shape.dim_size(1));
-    //DCHECK_EQ(weights_shape.dim_size(0), grad.shape().dim_size(0));
     
     // create output tensors
     Tensor* grad_input = NULL;
@@ -168,63 +161,44 @@ public:
     auto grad_input_tensor = grad_input->matrix<float>();
     auto grad_weights_tensor = grad_weights->matrix<float>();
     auto grad_biases_tensor = grad_biases->matrix<float>();
-    
 
-    int input_count = input_shape.dim_size(1);  //Number of values in each sample
-    int sample_count = input_shape.dim_size(0); //Number of samples in batch
-    int unit_count = weights_shape.dim_size(1); //Number of units
+    int input_feature_width = input_shape.dim_size(1);  //Number of values in each sample
+    int batch_samples = input_shape.dim_size(0); //Number of samples in batch
+    int units = weights_shape.dim_size(1); //Number of units
     
-
-    //Build gradient of bias with respect to output
-    //printf("Biases tensor %d %d\n", biases_shape.dim_size(0), biases_shape.dim_size(1));    
-    for (int x = 0; x < unit_count; x++) 
+    for (int x = 0; x < units; x++) 
     {
         grad_biases_tensor(0, x) = 0.0;
-        for(int i=0; i<sample_count;i++)
-        {
-            grad_biases_tensor(0, x) += grad_tensor(i,x);      
-        }       
     }
 
-  
-    //Build gradient of weights with respect to output
-    //printf("Weights tensor %d %d\n", weights_shape.dim_size(0), weights_shape.dim_size(1));    
-    for (int x = 0; x < unit_count; x++) //unit index 
+    for (int x = 0; x < units; x++) //unit index 
     {
-        for (int y = 0; y < input_count; y++) //input feature index
+        for (int y = 0; y < input_feature_width; y++) //input feature index
         {
             grad_weights_tensor(y, x) = 0.0;
-            for(int i=0; i<sample_count;i++)
-            {
-                grad_weights_tensor(y, x) += input_tensor(i,y)*grad_tensor(i,x);      
-            }
         }
     }
     
-    
-    //Build gradient of input with respect to output
-    //printf("Input tensor %d %d\n", input_shape.dim_size(0), input_shape.dim_size(1));    
-    for (int x = 0; x < input_count; x++) 
+    for (int x = 0; x < input_feature_width; x++) 
     {
-        for (int y = 0; y < sample_count; y++) 
+        for (int y = 0; y < batch_samples; y++) 
         {
-            //printf("...%d...%d\n", y, x);
             grad_input_tensor(y, x) = 0.0;
-            for(int i=0; i<unit_count;i++)
-            {
-                grad_input_tensor(y, x) += weights_tensor(x,i) * grad_tensor(y,i);
-            }
         }
     }
     
-    
-    
-    
-    
-    //printf("Grad tensor %d %d \n", grad_shape.dim_size(0), grad_shape.dim_size(1));
-
-    //printf("DenseGradOp-End\n");
-    //printf("-----------------\n");
+    for (int ix_sample = 0; ix_sample < batch_samples; ix_sample++) {
+      for (int ix_unit = 0; ix_unit < units; ix_unit++) {
+        //output_tensor(ix_sample, ix_unit) = 0;
+        for (int ix_input = 0; ix_input < input_feature_width; ix_input++) {
+            //!!!output_tensor(ix_sample, ix_unit) += input_tensor(ix_sample, ix_input) * weights_tensor(ix_input, ix_unit );
+            grad_input_tensor(ix_sample, ix_input) += weights_tensor(ix_input, ix_unit )*grad_tensor(ix_sample, ix_unit);
+            grad_weights_tensor(ix_input, ix_unit ) += input_tensor(ix_sample, ix_input)*grad_tensor(ix_sample, ix_unit);
+        }  
+        //!!!output_tensor(ix_sample, ix_unit) += biases_tensor(0, ix_unit);
+        grad_biases_tensor(0, ix_unit) += grad_tensor(ix_sample, ix_unit);
+      }
+    }
   }
 };
 
