@@ -10,6 +10,8 @@
 
 using namespace tensorflow;
 
+void DenseKernelLauncher(const float* in, const int N, float* out);
+
 REGISTER_OP("Dense")
   .Input("input: float")
   .Input("weights: float")
@@ -99,6 +101,15 @@ public:
     auto biases_tensor = biases.matrix<float>();
     auto output_tensor = output->matrix<float>();
     
+    // Set all but the first element of the output tensor to 0.
+    const int N = 1;
+    auto f_input = input.flat<float>();
+    auto f_output = output->template flat<float>();
+
+    // Call the cuda kernel launcher
+    //DenseKernelLauncher(f_input.data(), N, f_output.data());
+
+    
     for (int ix_sample = 0; ix_sample < batch_samples; ix_sample++) {
       for (int ix_unit = 0; ix_unit < units; ix_unit++) {
         output_tensor(ix_sample, ix_unit) = 0;
@@ -108,6 +119,7 @@ public:
         output_tensor(ix_sample, ix_unit) += biases_tensor(0, ix_unit);
       }
     }
+    
   }
 };
 

@@ -5,12 +5,13 @@ import random
 import math
 import random
 import math
+import time
 dense_module = tf.load_op_library('build/libdense.so')
 import _dense_grad
 
 
 LEARNING_RATE = 0.002
-BATCH_SIZE = 64
+BATCH_SIZE = 10
 RANGE = 100
 
 
@@ -75,16 +76,23 @@ ax = fig.add_subplot(111)
 plt.ylim([-3,3])
 plt.xlim([-RANGE,RANGE])
 
-line_target, = ax.plot([0], [1], 'g.')
+line_target, = ax.plot([0], [1], 'g-')
 line_nn, = ax.plot([0], [1], 'r-')
-    
+d_x = [[(random.random()*2-1)*RANGE] for _ in range(BATCH_SIZE) ]
+d_y = [[blackbox_function(x[0])] for x in d_x]
+scatter = ax.scatter([d_x], [d_y], c='blue', s=4)
+
 def itemize(d):
     return list(map(lambda _: [_],d))
 
+starttime = time.time()
 iteration = 0
 while True:
     d_x = [[(random.random()*2-1)*RANGE] for _ in range(BATCH_SIZE) ]
     d_y = [[blackbox_function(x[0])] for x in d_x]
+
+
+
     #print("Training step begin")
     [tr, l, r] = session.run(fetches=[train_step, loss, response],feed_dict={X: d_x, Y: d_y})
     print("Iteration: %d Loss: %f" % (iteration, l))
@@ -104,5 +112,15 @@ while True:
 
     line_target.set_data(dp_x,dp_target)
     line_nn.set_data(dp_x,dp_nn)
-        
+
+    sp = []
+    for i in range(len(d_x)):
+        sp.append([d_x[i][0], d_y[i][0]])
+
+    scatter.set_offsets(sp)
+    
+
     fig.canvas.draw()
+    if iteration > 1000:
+        break
+print("%f ms per iteration" % (((time.time() - starttime)*1000)/(iteration)))
