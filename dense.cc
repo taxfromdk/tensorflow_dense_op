@@ -10,13 +10,13 @@
 
 using namespace tensorflow;
 
-void DenseKernelLauncher(const float* in, const int N, float* out);
+void DenseKernelLauncher(const double* in, const int N, double* out);
 
 REGISTER_OP("Dense")
-  .Input("input: float")
-  .Input("weights: float")
-  .Input("biases: float")
-  .Output("output: float")
+  .Input("input: double")
+  .Input("weights: double")
+  .Input("biases: double")
+  .Output("output: double")
   .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
 
     //printf("register op!!! \n");
@@ -96,15 +96,15 @@ public:
     OP_REQUIRES_OK(context, context->allocate_output(0, output_shape, &output));
     
     // get the corresponding Eigen tensors for data access
-    auto input_tensor = input.matrix<float>();
-    auto weights_tensor = weights.matrix<float>();
-    auto biases_tensor = biases.matrix<float>();
-    auto output_tensor = output->matrix<float>();
+    auto input_tensor = input.matrix<double>();
+    auto weights_tensor = weights.matrix<double>();
+    auto biases_tensor = biases.matrix<double>();
+    auto output_tensor = output->matrix<double>();
     
     // Set all but the first element of the output tensor to 0.
     const int N = 1;
-    auto f_input = input.flat<float>();
-    auto f_output = output->template flat<float>();
+    auto f_input = input.flat<double>();
+    auto f_output = output->template flat<double>();
 
     // Call the cuda kernel launcher
     //DenseKernelLauncher(f_input.data(), N, f_output.data());
@@ -126,13 +126,13 @@ public:
 REGISTER_KERNEL_BUILDER(Name("Dense").Device(DEVICE_CPU), DenseOp);
 
 REGISTER_OP("DenseGrad")
-  .Input("grad: float32")
-  .Input("input: float32")
-  .Input("weights: float32")
-  .Input("biases: float32")
-  .Output("grad_input: float32")
-  .Output("grad_weights: float32")
-  .Output("grad_biases: float32");
+  .Input("grad: double")
+  .Input("input: double")
+  .Input("weights: double")
+  .Input("biases: double")
+  .Output("grad_input: double")
+  .Output("grad_weights: double")
+  .Output("grad_biases: double");
 
 class DenseGradOp : public OpKernel {
 public:
@@ -166,13 +166,13 @@ public:
     OP_REQUIRES_OK(context, context->allocate_output(2, biases_shape, &grad_biases));
     
     // get the Eigen tensors for data access
-    auto grad_tensor = grad.matrix<float>();
-    auto weights_tensor = weights.matrix<float>();
-    auto input_tensor = input.matrix<float>();
+    auto grad_tensor = grad.matrix<double>();
+    auto weights_tensor = weights.matrix<double>();
+    auto input_tensor = input.matrix<double>();
     
-    auto grad_input_tensor = grad_input->matrix<float>();
-    auto grad_weights_tensor = grad_weights->matrix<float>();
-    auto grad_biases_tensor = grad_biases->matrix<float>();
+    auto grad_input_tensor = grad_input->matrix<double>();
+    auto grad_weights_tensor = grad_weights->matrix<double>();
+    auto grad_biases_tensor = grad_biases->matrix<double>();
 
     int input_feature_width = input_shape.dim_size(1);  //Number of values in each sample
     int batch_samples = input_shape.dim_size(0); //Number of samples in batch
