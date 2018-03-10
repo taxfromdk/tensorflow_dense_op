@@ -10,8 +10,8 @@ dense_module = tf.load_op_library('build/libdense.so')
 import _dense_grad
 
 
-LEARNING_RATE = 0.0005
-BATCH_SIZE = 10
+LEARNING_RATE = 0.001
+BATCH_SIZE = 100
 RANGE = 100
 
 
@@ -46,11 +46,11 @@ l = X
 #l =  tf.layers.dense(l, units=48, activation=tf.nn.relu)
 #l =  tf.layers.dense(l, units=1, activation=None)
 
-l =  full_layer(l, 32*2, tf.nn.relu6, "A")
-print(l)
-l =  full_layer(l, 24*2, tf.nn.relu6, "B")
-print(l)
-l =  full_layer(l, 16*2, None, "C")
+l =  full_layer(l, 100, tf.nn.relu, "A")
+#print(l)
+l =  full_layer(l, 100, tf.nn.relu, "B")
+#print(l)
+l =  full_layer(l, 1, None, "C")
 print(l)
 #l =  full_layer(l, 48, tf.nn.relu, "D")
 #print(l)
@@ -59,7 +59,7 @@ response = l
            
 Y = tf.placeholder(tf.float64, shape=(None, 1), name="y")
 
-loss = tf.reduce_sum(tf.pow(response - Y,2))
+loss = tf.reduce_mean(tf.pow((response - Y),2))
     
 train_step = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE).minimize(loss)
 
@@ -67,7 +67,7 @@ session = tf.Session()
 session.run(tf.global_variables_initializer())
 
 def blackbox_function(x):
-    return 1.0+math.sin(x*math.pi*2/RANGE)*0.5 + x/60.0
+    return 1.0+math.sin(2*x*math.pi*2/RANGE)*0.5 + x/60.0
 
 plt.ion()
 
