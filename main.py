@@ -10,7 +10,7 @@ dense_module = tf.load_op_library('build/libdense.so')
 import _dense_grad
 
 
-LEARNING_RATE = 0.002
+LEARNING_RATE = 0.0005
 BATCH_SIZE = 10
 RANGE = 100
 
@@ -20,14 +20,14 @@ print("Tensorflow version: ", tf.__version__)
 tf.set_random_seed(42)
 tf.reset_default_graph()
 
-X = tf.placeholder(tf.float32, shape=(None, 1), name="x")
+X = tf.placeholder(tf.float64, shape=(None, 1), name="x")
 
 def full_layer(i, units, af, n):
     print("---------full layer", units)
     print("i:", i.get_shape())
-    W = tf.get_variable(n+"_W",shape=(i.get_shape()[1], units), initializer=tf.contrib.layers.xavier_initializer())
+    W = tf.get_variable(n+"_W",shape=(i.get_shape()[1], units), initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float64)
     print("W:", W.get_shape())
-    b = tf.get_variable(n+"_b",shape=(1,units), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable(n+"_b",shape=(1,units), initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float64)
     print("b:", b.get_shape())
     #r_ = tf.matmul(i,W)
     #print("r_:", r_.get_shape())
@@ -57,7 +57,7 @@ print(l)
 
 response = l 
            
-Y = tf.placeholder(tf.float32, shape=(None, 1), name="y")
+Y = tf.placeholder(tf.float64, shape=(None, 1), name="y")
 
 loss = tf.reduce_sum(tf.pow(response - Y,2))
     
@@ -121,6 +121,6 @@ while True:
     
 
     fig.canvas.draw()
-    if iteration > 1000:
-        break
+    #if iteration > 1000:
+    #    break
 print("%f ms per iteration" % (((time.time() - starttime)*1000)/(iteration)))
