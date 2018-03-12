@@ -82,7 +82,7 @@ class DenceOpTest(unittest.TestCase):
 
                     print("dydI:", dydI)
 
-                    testdata = np.random.rand(n).astype(np.float64)-0.5
+                    testdata = (np.random.rand(n).astype(np.float64)-0.5)*100
                     epsilon = 10e-7
                     dydi = np.asarray(sess.run(dydI, feed_dict = {I: testdata})).flatten()
                     #print("Gradient analytically: ", dydi.shape)
@@ -110,7 +110,7 @@ class DenceOpTest(unittest.TestCase):
                         gradient_eval = "doublecheck for bugs"
                     
 
-                    print("Gradient error on %s is %e, Evaluation: %s"%(device, gradient_error, gradient_eval))
+                    print("Gradient error on %s is %    e, Evaluation: %s"%(device, gradient_error, gradient_eval))
         
                 
 if __name__ == '__main__':

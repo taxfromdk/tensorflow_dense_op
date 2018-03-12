@@ -1,8 +1,3 @@
-/// \file inner_product.cc
-/// \author David Stutz
-/// \brief Implementation of a inner product (i.e. fully connected layer)
-/// operation in Tensorflow.
-
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/platform/default/logging.h"
