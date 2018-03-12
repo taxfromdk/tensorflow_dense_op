@@ -9,13 +9,10 @@ import time
 dense_module = tf.load_op_library('build/libdense.so')
 import _dense_grad
 
-
 LEARNING_RATE = 0.001
 BATCH_SIZE = 100
 RANGE = 100
 
-
-#create graph
 print("Tensorflow version: ", tf.__version__)
 tf.set_random_seed(42)
 tf.reset_default_graph()
@@ -35,25 +32,24 @@ def full_layer(i, units, af, n):
     r = dense_module.dense(i,W,b)
     if af != None:
         r = af(r)
-    print("--->r:", r.get_shape())
-    
     return r
  
 l = X   
 
-#l =  tf.layers.dense(l, units=48, activation=tf.nn.relu)
-#l =  tf.layers.dense(l, units=48, activation=tf.nn.relu)
-#l =  tf.layers.dense(l, units=48, activation=tf.nn.relu)
-#l =  tf.layers.dense(l, units=1, activation=None)
-
-l =  full_layer(l, 100, tf.nn.relu, "A")
-#print(l)
-l =  full_layer(l, 100, tf.nn.relu, "B")
-#print(l)
-l =  full_layer(l, 1, None, "C")
+CUSTOM_OP = True
+if CUSTOM_OP:
+    l =  full_layer(l, 100, tf.nn.relu6, "A")
+    l =  full_layer(l, 100, tf.nn.relu6, "B")
+    l =  full_layer(l, 100, tf.nn.relu6, "C")
+    l =  full_layer(l, 100, tf.nn.relu6, "D")
+    l =  full_layer(l, 1, None, "E")
+else:
+    l =  tf.layers.dense(l, units=100, activation=tf.nn.relu6)
+    l =  tf.layers.dense(l, units=100, activation=tf.nn.relu6)
+    l =  tf.layers.dense(l, units=100, activation=tf.nn.relu6)
+    l =  tf.layers.dense(l, units=100, activation=tf.nn.relu6)
+    l =  tf.layers.dense(l, units=1, activation=None)
 print(l)
-#l =  full_layer(l, 48, tf.nn.relu, "D")
-#print(l)
 
 response = l 
            
@@ -121,6 +117,6 @@ while True:
     
 
     fig.canvas.draw()
-    #if iteration > 1000:
-    #    break
+    if iteration > 1000:
+        break
 print("%f ms per iteration" % (((time.time() - starttime)*1000)/(iteration)))
