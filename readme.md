@@ -10,7 +10,7 @@ rm -rf build; mkdir build; cd build; cmake ..; make; cd ..; python dense_tests.p
 
 Test simple case
 
-pythin main.py
+python main.py
 
 Beware this is work in progress and not working yet!
 
